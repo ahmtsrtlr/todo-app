@@ -21,6 +21,18 @@ const initialState: AuthInitialState = {
   error: null,
 };
 
+// Helper function to handle client-blocked errors
+const handleClientBlockedError = (error: any) => {
+  if (
+    error.code === "auth/network-request-failed" ||
+    error.message.includes("ERR_BLOCKED_BY_CLIENT") ||
+    error.message.includes("net::ERR_BLOCKED_BY_CLIENT")
+  ) {
+    return "Network request blocked. Please check your browser extensions or network settings.";
+  }
+  return error.message;
+};
+
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userData: LoginData, { rejectWithValue }) => {
@@ -37,7 +49,7 @@ export const loginUser = createAsyncThunk(
         displayName: user.displayName || "",
       };
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(handleClientBlockedError(error));
     }
   }
 );
@@ -63,7 +75,7 @@ export const registerUser = createAsyncThunk(
         displayName: userData.displayName,
       };
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(handleClientBlockedError(error));
     }
   }
 );
@@ -72,9 +84,23 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      await signOut(auth);
+      // Clear any pending operations before logout
+      if (auth.currentUser) {
+        await signOut(auth);
+      }
       return null;
     } catch (error: any) {
+      // Handle specific Firebase errors more gracefully
+      if (
+        error.code === "auth/network-request-failed" ||
+        error.message.includes("ERR_BLOCKED_BY_CLIENT") ||
+        error.message.includes("net::ERR_BLOCKED_BY_CLIENT")
+      ) {
+        console.warn(
+          "Network error during logout, proceeding with local logout"
+        );
+        return null; // Still return success for local logout
+      }
       return rejectWithValue(error.message);
     }
   }
@@ -87,7 +113,7 @@ export const resetPassword = createAsyncThunk(
       await sendPasswordResetEmail(auth, email);
       return "Password reset email sent successfully";
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(handleClientBlockedError(error));
     }
   }
 );

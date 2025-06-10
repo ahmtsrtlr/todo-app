@@ -7,6 +7,7 @@ import AuthButton from "./AuthButton";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -22,9 +23,19 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    await dispatch(logoutUser());
-    navigate("/");
-    setIsMobileMenuOpen(false);
+    try {
+      setIsLoggingOut(true);
+      await dispatch(logoutUser()).unwrap();
+      navigate("/");
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      console.warn("Logout error (proceeding anyway):", error);
+      // Still navigate away even if there's an error
+      navigate("/");
+      setIsMobileMenuOpen(false);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const toggleMobileMenu = () => {
@@ -67,8 +78,9 @@ const Header = () => {
                   variant="danger"
                   onClick={handleLogout}
                   className="text-sm"
+                  disabled={isLoggingOut}
                 >
-                  Çıkış Yap
+                  {isLoggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}
                 </AuthButton>
               </div>
             ) : (
@@ -149,8 +161,9 @@ const Header = () => {
                       variant="danger"
                       onClick={handleLogout}
                       className="w-full justify-center"
+                      disabled={isLoggingOut}
                     >
-                      Çıkış Yap
+                      {isLoggingOut ? "Çıkış yapılıyor..." : "Çıkış Yap"}
                     </AuthButton>
                   </div>
                 </div>

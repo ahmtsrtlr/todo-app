@@ -5,6 +5,7 @@ interface AuthButtonProps {
   children: React.ReactNode;
   onClick: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 const AuthButton: React.FC<AuthButtonProps> = ({
@@ -12,9 +13,10 @@ const AuthButton: React.FC<AuthButtonProps> = ({
   children,
   onClick,
   className = "",
+  disabled = false,
 }) => {
   const baseClasses =
-    "px-4 py-2 font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center";
+    "px-4 py-2 font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none";
 
   const variantClasses = {
     primary:
@@ -28,6 +30,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
     >
       {children}

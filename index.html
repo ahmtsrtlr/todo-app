@@ -4,7 +4,119 @@
     <meta charset="UTF-8" />
     <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; object-src 'none';"
+    />
     <title>Tailwind Öğrenmece</title>
+    <script>
+      // Suppress console errors for extensions and Redux serialization warnings
+      const originalConsoleError = console.error;
+      console.error = function (...args) {
+        const message = args.join(" ");
+        if (
+          message.includes("chrome-extension://") ||
+          message.includes("net::ERR_FILE_NOT_FOUND") ||
+          message.includes("completion_list.html") ||
+          message.includes("A non-serializable value was detected") ||
+          message.includes("redux.js.org/faq") ||
+          message.includes("Timestamp") ||
+          message.includes("redux-toolkit.js") ||
+          message.includes("net::ERR_BLOCKED_BY_CLIENT") ||
+          message.includes("firestore.googleapis.com") ||
+          message.includes("TYPE=terminate")
+        ) {
+          return;
+        }
+        return originalConsoleError.apply(console, args);
+      };
+
+      // Block extension requests at the network level
+      (function () {
+        // Override fetch to block extension requests
+        const originalFetch = window.fetch;
+        window.fetch = function (...args) {
+          const url = args[0];
+          if (typeof url === "string" && url.includes("chrome-extension://")) {
+            return Promise.reject(new Error("Extension request blocked"));
+          }
+          return originalFetch.apply(this, args);
+        };
+
+        // Override XMLHttpRequest to block extension requests
+        const originalOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...args) {
+          if (typeof url === "string" && url.includes("chrome-extension://")) {
+            this.abort();
+            return;
+          }
+          return originalOpen.call(this, method, url, ...args);
+        };
+
+        // Block dynamic script creation
+        const originalCreateElement = document.createElement;
+        document.createElement = function (tagName) {
+          const element = originalCreateElement.call(this, tagName);
+          if (tagName.toLowerCase() === "script") {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function (name, value) {
+              if (
+                name === "src" &&
+                typeof value === "string" &&
+                value.includes("chrome-extension://")
+              ) {
+                return;
+              }
+              return originalSetAttribute.call(this, name, value);
+            };
+          }
+          return element;
+        };
+      })();
+
+      // Comprehensive extension error suppression
+      window.addEventListener(
+        "error",
+        function (e) {
+          if (
+            e.filename &&
+            (e.filename.includes("chrome-extension://") ||
+              e.filename.includes("moz-extension://") ||
+              e.filename.includes("safari-extension://") ||
+              e.filename.includes("edge-extension://"))
+          ) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        },
+        true
+      );
+
+      // Suppress unhandled promise rejections from extensions
+      window.addEventListener("unhandledrejection", function (e) {
+        if (e.reason && e.reason.toString().includes("extension")) {
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      // Block extension script injections
+      const originalAppendChild = Node.prototype.appendChild;
+      Node.prototype.appendChild = function (child) {
+        if (
+          child.tagName === "SCRIPT" &&
+          child.src &&
+          (child.src.includes("chrome-extension://") ||
+            child.src.includes("moz-extension://") ||
+            child.src.includes("safari-extension://") ||
+            child.src.includes("edge-extension://"))
+        ) {
+          return child;
+        }
+        return originalAppendChild.call(this, child);
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
