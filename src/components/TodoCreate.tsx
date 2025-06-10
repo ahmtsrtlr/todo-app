@@ -6,7 +6,7 @@ import { createTodo } from "../redux/slices/todoSlice";
 const TodoCreate = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { loading } = useSelector((state: RootState) => state.todo);
+  const { loading } = useSelector((state: RootState) => state.todos);
   const [newTodo, setNewTodo] = useState<string>("");
 
   const handleCreateTodo = async () => {

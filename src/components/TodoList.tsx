@@ -15,7 +15,7 @@ import { setTodos, clearTodos } from "../redux/slices/todoSlice";
 
 const TodoList = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { todos, loading } = useSelector((state: RootState) => state.todo);
+  const { todos, loading } = useSelector((state: RootState) => state.todos);
   const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
