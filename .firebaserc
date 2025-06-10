@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "todo-app-0126"
+  },
+  "targets": {
+    "todo-app-0126": {
+      "hosting": {
+        "asertlerogullari-todoapp": [
+          "asertlerogullari-todoapp"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
