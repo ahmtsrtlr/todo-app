@@ -1,24 +1,30 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import type { TodoType } from "../types/Types";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../redux/store";
 import { createTodo } from "../redux/slices/todoSlice";
 
 const TodoCreate = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.todo);
   const [newTodo, setNewTodo] = useState<string>("");
 
-  const handleCreateTodo = () => {
-    if (newTodo.trim() === "") {
-      alert("Lütfen geçerli bir görev girin.");
+  const handleCreateTodo = async () => {
+    if (newTodo.trim() === "" || !user) {
       return;
     }
-    const payload: TodoType = {
-      id: Math.floor(Math.random() * 10000),
-      content: newTodo,
-    };
-    dispatch(createTodo(payload));
-    setNewTodo("");
-    alert("Görev başarıyla eklendi!");
+
+    try {
+      await dispatch(
+        createTodo({
+          content: newTodo,
+          userId: user.uid,
+        })
+      );
+      setNewTodo("");
+    } catch (error) {
+      console.error("Error creating todo:", error);
+    }
   };
 
   return (
@@ -33,18 +39,19 @@ const TodoCreate = () => {
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
               handleCreateTodo();
-              setNewTodo("");
             }
           }}
           autoFocus
           type="text"
           placeholder="Yeni görev ekle..."
+          disabled={loading}
         />
         <button
           onClick={handleCreateTodo}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transform hover:scale-105 transition-all duration-200 shadow-md"
+          disabled={loading || newTodo.trim() === ""}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transform hover:scale-105 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          Ekle
+          {loading ? "Ekleniyor..." : "Ekle"}
         </button>
       </div>
     </div>

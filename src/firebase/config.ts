@@ -16,12 +16,29 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Debug: Check if environment variables are loaded
+console.log('Environment variables loaded:', {
+  apiKey: firebaseConfig.apiKey ? '✓' : '✗',
+  projectId: firebaseConfig.projectId ? '✓' : '✗',
+  authDomain: firebaseConfig.authDomain ? '✓' : '✗'
+});
+
+// Validate required config values
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.authDomain) {
+  console.error('Missing environment variables. Make sure .env file is in project root and contains all VITE_FIREBASE_* variables');
+  throw new Error('Firebase configuration is missing required values. Check your .env file location and restart dev server.');
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-export const analytics = getAnalytics(app);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// Initialize Analytics only if measurementId is available and we're in browser
+export const analytics = typeof window !== 'undefined' && firebaseConfig.measurementId 
+  ? getAnalytics(app) 
+  : null;
 
 export default app;

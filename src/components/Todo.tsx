@@ -1,6 +1,7 @@
 import { CiCircleCheck, CiEdit, CiCircleRemove } from "react-icons/ci";
 import type { TodoType } from "../types/Types";
 import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../redux/store";
 import { removeTodoById, updateTodo } from "../redux/slices/todoSlice";
 import { useState } from "react";
 
@@ -9,37 +10,64 @@ interface TodoProps {
 }
 
 const Todo = ({ todo }: TodoProps) => {
-  const { id, content } = todo;
-  const dispatch = useDispatch();
+  const { id, content, completed } = todo;
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [edittable, setEditable] = useState<boolean>(false);
+  const [editable, setEditable] = useState<boolean>(false);
   const [newTodoContent, setNewTodoContent] = useState<string>(content);
 
-  const handleRemoveTodo = () => {
-    console.log(id);
-    dispatch(removeTodoById(id));
+  const handleRemoveTodo = async () => {
+    try {
+      await dispatch(removeTodoById(id));
+    } catch (error) {
+      console.error("Error removing todo:", error);
+    }
   };
-  const handleUpdateTodo = () => {
+
+  const handleUpdateTodo = async () => {
     if (newTodoContent.trim() === "") {
-      alert("Todo content cannot be empty");
+      setNewTodoContent(content);
+      setEditable(false);
       return;
     }
-    const payload: TodoType = {
-      id: id,
-      content: newTodoContent,
-    };
-    dispatch(updateTodo(payload));
-    // Dispatch an action to update the todo content
-    // Assuming you have an action like updateTodoById in your todoSlice
-    // dispatch(updateTodoById({ id, content: newTodoContent }));
-    setEditable(false);
+
+    try {
+      await dispatch(
+        updateTodo({
+          id: id,
+          content: newTodoContent,
+          completed: completed,
+        })
+      );
+      setEditable(false);
+    } catch (error) {
+      console.error("Error updating todo:", error);
+    }
+  };
+
+  const handleToggleComplete = async () => {
+    try {
+      await dispatch(
+        updateTodo({
+          id: id,
+          content: content,
+          completed: !completed,
+        })
+      );
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+    }
   };
 
   return (
-    <div className="group bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+    <div
+      className={`group bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg hover:border-gray-300 transition-all duration-300 ${
+        completed ? "opacity-75" : ""
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1 mr-4">
-          {edittable ? (
+          {editable ? (
             <input
               className="w-full border-2 border-blue-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
               value={newTodoContent}
@@ -50,26 +78,41 @@ const Todo = ({ todo }: TodoProps) => {
                 if (e.key === "Enter") {
                   handleUpdateTodo();
                 }
+                if (e.key === "Escape") {
+                  setNewTodoContent(content);
+                  setEditable(false);
+                }
               }}
               autoFocus
               type="text"
               onBlur={handleUpdateTodo}
             />
           ) : (
-            <span className="text-gray-800 text-lg leading-relaxed">
+            <span
+              className={`text-gray-800 text-lg leading-relaxed ${
+                completed ? "line-through" : ""
+              }`}
+            >
               {content}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
-          {!edittable && (
-            <button className="p-2 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110">
+          {!editable && (
+            <button
+              onClick={handleToggleComplete}
+              className={`p-2 hover:bg-green-50 rounded-lg transition-all duration-200 transform hover:scale-110 ${
+                completed
+                  ? "text-green-600"
+                  : "text-green-500 hover:text-green-600"
+              }`}
+            >
               <CiCircleCheck className="w-6 h-6" />
             </button>
           )}
 
-          {edittable ? (
+          {editable ? (
             <button
               onClick={handleUpdateTodo}
               className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
@@ -78,14 +121,14 @@ const Todo = ({ todo }: TodoProps) => {
             </button>
           ) : (
             <button
-              onClick={() => setEditable(!edittable)}
+              onClick={() => setEditable(!editable)}
               className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:scale-110"
             >
               <CiEdit className="w-6 h-6" />
             </button>
           )}
 
-          {!edittable && (
+          {!editable && (
             <button
               onClick={handleRemoveTodo}
               className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:scale-110"
