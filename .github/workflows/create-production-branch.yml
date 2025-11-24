@@ -1,0 +1,46 @@
+name: Create Production Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: 'Base branch to create production from'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-production-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_branch }}
+          fetch-depth: 0
+
+      - name: Create and push production branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if production branch exists
+          if git ls-remote --exit-code --heads origin production; then
+            echo "::notice::Production branch already exists on remote"
+            echo "### ℹ️ Production Branch Already Exists" >> $GITHUB_STEP_SUMMARY
+            echo "The production branch already exists in the repository." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          
+          # Create production branch
+          git checkout -b production
+          
+          # Push production branch
+          git push origin production
+          
+          echo "::notice::Production branch created successfully from ${{ inputs.base_branch }}"
+          echo "### ✅ Production Branch Created" >> $GITHUB_STEP_SUMMARY
+          echo "Production branch has been created from \`${{ inputs.base_branch }}\`" >> $GITHUB_STEP_SUMMARY
