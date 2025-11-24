@@ -49,6 +49,13 @@ npm run dev
 - `npm run build` - Build for production
 - `npm run lint` - Run ESLint
 
+### 🌿 Branches
+
+- **main**: Development branch
+- **production**: Production branch for stable releases
+
+See [Production Branch Documentation](docs/PRODUCTION_BRANCH.md) for more details.
+
 ---
 
 ## Türkçe
@@ -95,3 +102,11 @@ npm run dev
 - `npm run dev` - Geliştirme sunucusunu başlat
 - `npm run build` - Production build
 - `npm run lint` - ESLint çalıştır
+
+### 🌿 Dallar (Branches)
+
+- **main**: Geliştirme dalı
+- **production**: Stabil sürümler için production dalı
+
+Daha fazla bilgi için [Production Branch Dokümantasyonu](docs/PRODUCTION_BRANCH.md)'na bakın.
+
