@@ -18,14 +18,20 @@ if git ls-remote --exit-code --heads origin production > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if production branch exists locally
+# If production branch exists locally but not on remote, delete it to avoid confusion
 if git show-ref --verify --quiet refs/heads/production; then
-    echo "Production branch exists locally. Checking out..."
-    git checkout production
-else
-    echo "Creating production branch from origin/$BASE_BRANCH..."
-    git checkout -b production origin/$BASE_BRANCH
+    echo "⚠️  Local production branch exists but remote doesn't. Deleting local branch..."
+    # Switch to base branch first if we're on production
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [ "$CURRENT_BRANCH" = "production" ]; then
+        git checkout "$BASE_BRANCH"
+    fi
+    git branch -D production
 fi
+
+# Create production branch from origin base branch
+echo "Creating production branch from origin/$BASE_BRANCH..."
+git checkout -b production origin/$BASE_BRANCH
 
 # Push to remote
 echo "Pushing production branch to remote..."
